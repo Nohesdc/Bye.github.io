@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>毕业合影邀请函 - 中央民族大学</title>
+    <style>
+        /* ================= 基础设置 ================= */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            color: #333;
+            overflow-x: hidden;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* ================= 场景1：信封封面屏 ================= */
+        #envelope-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            z-index: 100;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        .envelope-title {
+            font-size: 20px;
+            color: #8b1538;
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+            font-weight: bold;
+            animation: fadeInDown 1s ease;
+        }
+
+        /* 信封主体容器 */
+        .envelope-container {
+            position: relative;
+            width: 320px;
+            height: 220px;
+            cursor: pointer;
+            perspective: 1000px; /* 开启3D视角 */
+        }
+
+        /* 信封背面（最底层） */
+        .env-back {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #aa2045;
+            border-radius: 6px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            z-index: 1;
+        }
+
+        /* 信纸预览（藏在信封里） */
+        .env-paper {
+            position: absolute;
+            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            background: #fff;
+            border-radius: 4px;
+            z-index: 2;
+            transition: transform 0.8s ease-in-out 0.4s; 
+        }
+
+        /* 信封正面折叠（左、右、底） */
+        .env-front {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border-left: 160px solid #9a183e;
+            border-right: 160px solid #9a183e;
+            border-bottom: 120px solid #8b1538;
+            border-top: 100px solid transparent;
+            border-radius: 6px;
+            z-index: 3;
+        }
+
+        /* 信封盖子（顶） */
+        .env-flap {
+            position: absolute;
+            top: 0; left: 0;
+            border-left: 160px solid transparent;
+            border-right: 160px solid transparent;
+            border-top: 130px solid #ba254d;
+            z-index: 4;
+            transform-origin: top center;
+            transition: transform 0.6s ease-in-out;
+        }
+
+        /* 盖章（拆字按钮） */
+        .env-seal {
+            position: absolute;
+            top: 130px; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px; height: 50px;
+            background: linear-gradient(135deg, #d4af37, #aa8222); 
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 50px;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 5;
+            transition: opacity 0.3s;
+            animation: pulse 2s infinite;
+        }
+
+        /* 点击拆开后的动画状态 */
+        .envelope-container.open .env-seal { opacity: 0; animation: none; }
+        .envelope-container.open .env-flap { transform: rotateX(180deg); z-index: 1; }
+        .envelope-container.open .env-paper { transform: translateY(-80px); }
+
+        /* ================= 场景2：邀请函正式屏 ================= */
+        #card-screen {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; min-height: 100%;
+            display: none; 
+            opacity: 0;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 20px;
+            transition: opacity 1s ease-in-out;
+            z-index: 10;
+        }
+
+        /* 邀请函主卡片 */
+        .card {
+            background: #ffffff;
+            max-width: 500px;
+            width: 100%;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(139, 21, 56, 0.1);
+            overflow: hidden;
+            position: relative;
+            z-index: 20;
+            transform: translateY(30px);
+            transition: transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        #card-screen.show .card {
+            transform: translateY(0);
+        }
+
+        /* 卡片内部排版 */
+        .header {
+            background: linear-gradient(135deg, #8b1538 0%, #aa2045 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            position: relative;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -15px; left: 50%;
+            transform: translateX(-50%);
+            border-width: 15px 15px 0;
+            border-style: solid;
+            border-color: #aa2045 transparent transparent transparent;
+        }
+        .header h1 { font-size: 24px; letter-spacing: 2px; margin-bottom: 10px; }
+        .header p { font-size: 14px; opacity: 0.9; letter-spacing: 1px; }
+
+        /* 内容区底部留白加大了，保持卡片平衡 */
+        .content { padding: 40px 30px 40px; }
+        .salutation { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #8b1538; }
+        .text { font-size: 15px; color: #555; text-align: justify; }
+        .text p { text-indent: 2em; margin-bottom: 15px; line-height: 1.8; }
+
+        .details-box {
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-left: 4px solid #8b1538;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .detail-item { display: flex; margin-bottom: 10px; font-size: 15px; }
+        .detail-item:last-child { margin-bottom: 0; }
+        .detail-label { font-weight: bold; color: #333; width: 60px; flex-shrink: 0; }
+        .detail-value { color: #666; font-weight: 500; }
+
+        .signature { text-align: right; margin-top: 30px; font-size: 15px; color: #333; }
+        .signature p { margin-bottom: 5px; }
+
+
+        /* ================= 场景3：弹幕层 ================= */
+        #danmu-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none; 
+            z-index: 999;         
+            overflow: hidden;
+        }
+        .danmu-item {
+            position: absolute;
+            white-space: nowrap;
+            font-weight: 800;
+            text-shadow: 
+                0 0 4px rgba(255,255,255,1), 
+                0 0 8px rgba(255,255,255,0.8),
+                1px 1px 2px rgba(255,255,255,1);
+            animation: moveDanmu linear forwards;
+        }
+
+
+        /* ================= 动画关键帧 ================= */
+        @keyframes moveDanmu {
+            0% { left: 100vw; transform: translateX(0); }
+            100% { left: -100px; transform: translateX(-100%); }
+        }
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
+            70% { transform: translate(-50%, -50%) scale(1.05); box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); }
+            100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 场景1：信封屏 -->
+    <div id="envelope-screen">
+        <div class="envelope-title">敬爱的老师，您有一封信件</div>
+        <div class="envelope-container" onclick="openEnvelope()">
+            <div class="env-back"></div>
+            <div class="env-paper"></div>
+            <div class="env-front"></div>
+            <div class="env-flap"></div>
+            <div class="env-seal">拆</div>
+        </div>
+    </div>
+
+    <!-- 场景2：邀请函正式内容 -->
+    <div id="card-screen">
+        <div class="card">
+            <div class="header">
+                <h1>毕业合影邀请函</h1>
+                <p>中央民族大学 · 理学院</p>
+                <p>纳米材料与技术专业</p>
+            </div>
+
+            <div class="content">
+                <div class="salutation">敬爱的老师：</div>
+                <div class="text">
+                    <p>见字如面，展信佳。</p>
+                    <p>时光荏苒，岁月如梭。转眼间，我们在中央民族大学理学院度过了难忘的青春岁月。在这段求学之旅中，是您以渊博的学识为我们指点迷津，以春风化雨般的关怀陪伴我们成长。您在专业教学与科研中的辛勤付出，我们全体毕业生铭记于心。</p>
+                    <p>芳华待灼，感恩有您。5月21日，我们将穿上学位服，留下大学时代最珍贵的影像。我们诚挚地邀请您能在百忙之中拨冗出席，与我们共同合影留念，见证我们的成长与启航！</p>
+                </div>
+
+                <div class="details-box">
+                    <div class="detail-item">
+                        <div class="detail-label">日 期：</div>
+                        <div class="detail-value">2026年5月21日（星期四）</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">时 间：</div>
+                        <div class="detail-value">上午 10:40</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">地 点：</div>
+                        <div class="detail-value">海淀校区大礼堂前</div>
+                    </div>
+ 
+                </div>
+
+                <div class="signature">
+                    <p>中央民族大学理学院</p>
+                    <p>纳米材料与技术专业全体毕业生</p>
+                    <p>敬上</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 场景3：弹幕容器 -->
+    <div id="danmu-container"></div>
+
+    <!-- 交互逻辑脚本 -->
+    <script>
+        /* ================= 1. 信封开启动画逻辑 ================= */
+        let isOpened = false;
+
+        function openEnvelope() {
+            if (isOpened) return;
+            isOpened = true;
+
+            const envelopeContainer = document.querySelector('.envelope-container');
+            const envelopeScreen = document.getElementById('envelope-screen');
+            const cardScreen = document.getElementById('card-screen');
+
+            // 1. 触发信封拆开动画
+            envelopeContainer.classList.add('open');
+
+            // 2. 等待信封动画完成后，淡出信封屏，淡入邀请函屏
+            setTimeout(() => {
+                envelopeScreen.style.opacity = '0';
+                
+                setTimeout(() => {
+                    envelopeScreen.style.display = 'none'; 
+                    cardScreen.style.display = 'flex';     
+                    
+                    void cardScreen.offsetWidth; 
+                    
+                    cardScreen.style.opacity = '1';
+                    cardScreen.classList.add('show');
+                    
+                    // 3. 信件出现后，开始播放弹幕
+                    startDanmuSystem();
+                }, 800); 
+            }, 1200); 
+        }
+
+
+        /* ================= 2. 弹幕系统逻辑 ================= */
+        const danmuTexts = [
+            "毕业快乐！！！🎓",
+            "感谢老师的悉心栽培！❤",
+            "老师来一起比个耶✌️",
+            "我们的师生情比纳米材料还坚固！",
+            "感谢老师帮我们‘合成’了美好的大学时光！",
+            "美哉民大！理学院yyds！",
+            "老师，期待您的神仙颜值✨",
+            "一定要来找我们拍照哦！📸",
+            "扶我起来，我还能再做组实验！(bushi)",
+            "一日为师，终身为神！",
+            "愿前程似锦，顶峰相见！",
+            "老师辛苦啦！喝杯奶茶歇会吧~",
+            "MUC 纳米人，冲鸭！"
+        ];
+
+        function startDanmuSystem() {
+            const container = document.getElementById('danmu-container');
+
+            function createDanmu() {
+                const el = document.createElement('div');
+                el.className = 'danmu-item';
+                
+                el.innerText = danmuTexts[Math.floor(Math.random() * danmuTexts.length)];
+                el.style.top = Math.random() * 85 + 5 + '%';
+                el.style.fontSize = Math.floor(Math.random() * 8 + 16) + 'px'; 
+                
+                const opacity = (Math.random() * 0.35 + 0.5).toFixed(2);
+                
+                const colors = [
+                    `rgba(139, 21, 56, ${opacity})`,   
+                    `rgba(200, 40, 80, ${opacity})`,   
+                    `rgba(204, 163, 51, ${opacity})`   
+                ];
+                el.style.color = colors[Math.floor(Math.random() * colors.length)];
+                
+                const duration = Math.floor(Math.random() * 10 + 8);
+                el.style.animationDuration = duration + 's';
+
+                container.appendChild(el);
+
+                setTimeout(() => { el.remove(); }, duration * 1000);
+            }
+
+            for(let i=0; i<3; i++) {
+                setTimeout(createDanmu, i * 600);
+            }
+            setInterval(createDanmu, 1600);
+        }
+    </script>
+</body>
+</html>
